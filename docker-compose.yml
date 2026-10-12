@@ -1,0 +1,53 @@
+# AstroTrack - ambiente completo (API + Oracle)
+# Uso: cp .env.example .env  (preencha os valores)  &&  docker compose up -d --build
+
+services:
+  oracle:
+    image: gvenzl/oracle-free:23-slim-faststart
+    container_name: astrotrack-oracle
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:?defina ORACLE_PASSWORD no .env}
+      # Usuário/schema da aplicação, criado no FREEPDB1 na primeira inicialização
+      APP_USER: ${APP_USER:?defina APP_USER no .env}
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD:?defina APP_USER_PASSWORD no .env}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      # Script da própria imagem: verifica se o banco está aberto e aceitando conexões
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+      start_interval: 5s
+    networks:
+      - astrotrack-net
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: astrotrack-api
+    container_name: astrotrack-api
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      ConnectionStrings__OracleConnection: "User Id=${APP_USER};Password=${APP_USER_PASSWORD};Data Source=oracle:1521/FREEPDB1"
+      Jwt__Key: ${Jwt__Key:?defina Jwt__Key no .env}
+      Jwt__Issuer: ${Jwt__Issuer:-AstroTrack}
+      Jwt__Audience: ${Jwt__Audience:-AstroTrackUsers}
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      RUN_MIGRATIONS: "true"
+    depends_on:
+      oracle:
+        condition: service_healthy
+    networks:
+      - astrotrack-net
+
+volumes:
+  oracle-data:
+
+networks:
+  astrotrack-net:
+    name: astrotrack-net
+    driver: bridge
