@@ -1,0 +1,24 @@
+# Artefatos de build (em qualquer pasta)
+**/bin/
+**/obj/
+
+# IDE / controle de versão
+**/.vs/
+**/.vscode/
+**/.idea/
+.git/
+.github/
+
+# Segredos: nunca devem entrar na imagem
+.env
+**/.env
+
+# Fora do escopo da imagem da API
+AstroTrack.Tests/
+docs/
+**/TestResults/
+
+# Arquivos do próprio Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml

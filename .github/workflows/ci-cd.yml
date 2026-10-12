@@ -1,0 +1,256 @@
+# ═════════════════════════════════════════════════════════════════════════════
+# AstroTrack - Pipeline CI/CD
+#
+# Fluxo:
+#   1. build-and-test     -> compila e roda os testes (em todo push e PR)
+#   2. docker-image       -> gera a imagem Docker e publica no GHCR (só em push)
+#   3. deploy-staging     -> publica no Render (staging)   - push na develop
+#   4. deploy-production  -> publica no Render (produção)  - push na main
+#
+# Cada job só roda se o anterior passar: código que não compila ou com teste
+# falhando nunca vira imagem, e imagem que não foi gerada nunca vai para deploy.
+# ═════════════════════════════════════════════════════════════════════════════
+
+name: CI/CD AstroTrack
+
+# ─── Gatilhos ────────────────────────────────────────────────────────────────
+# - push em develop/main: pipeline completo (CI + imagem + deploy do ambiente)
+# - pull_request para main: só o CI, para validar o código antes do merge
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [main]
+
+# Permissão mínima por padrão (só leitura do código).
+# O job que publica a imagem pede a permissão extra de que precisa.
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "9.0.x"
+  # Nome da imagem no GitHub Container Registry
+  IMAGE_NAME: ghcr.io/artcorreia/astrotrack-devops
+  # Endpoint usado no health check dos deploys. O documento OpenAPI é gerado
+  # pela própria API a partir dos controllers, então só responde 200 se a
+  # aplicação subiu de verdade. (Obs.: o Swagger UI desta API fica em
+  # /index.html, pois o Program.cs usa RoutePrefix vazio; /swagger/index.html
+  # retorna 404.)
+  HEALTH_CHECK_PATH: /swagger/v1/swagger.json
+  # Desliga telemetria e mensagens de primeira execução do .NET no runner
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 1 - Build e testes (CI)
+  # Roda sempre: em push na develop/main e em pull requests para a main.
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-and-test:
+    name: Build e testes automatizados
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v7
+
+      - name: Instalar o .NET 9
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # Baixa os pacotes NuGet de todos os projetos da solution (API + testes)
+      - name: Restaurar dependências (dotnet restore)
+        run: dotnet restore AstroTrack.slnx
+
+      # Compila em Release; --no-restore reaproveita o passo anterior
+      - name: Compilar em Release (dotnet build)
+        run: dotnet build AstroTrack.slnx --configuration Release --no-restore
+
+      # Roda os testes unitários (xUnit + Moq, sem banco) e gera o relatório
+      # no formato TRX dentro da pasta TestResults
+      - name: Executar testes unitários (dotnet test)
+        run: >
+          dotnet test AstroTrack.slnx
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=resultado-testes.trx"
+          --logger "console;verbosity=normal"
+          --results-directory TestResults
+
+      # Publica o relatório como artifact, disponível para download na página
+      # da execução. "always()" garante o upload mesmo quando algum teste falha,
+      # que é justamente quando o relatório é mais útil.
+      - name: Publicar resultado dos testes (artifact)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: resultado-testes
+          path: TestResults/*.trx
+          if-no-files-found: error
+          retention-days: 30
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 2 - Imagem Docker
+  # Só em push (não em PR) e só se o build e os testes passaram.
+  # ═══════════════════════════════════════════════════════════════════════════
+  docker-image:
+    name: Build e publicação da imagem Docker (GHCR)
+    needs: build-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # GITHUB_TOKEN precisa de "packages: write" para publicar no GHCR
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v7
+
+      # Buildx habilita o cache de camadas entre execuções (ver cache-from/to)
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # Login no GHCR com o token automático do GitHub Actions (sem secret manual)
+      - name: Autenticar no GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Define as tags da imagem:
+      #   - SHA completo do commit -> versão imutável e rastreável até o código
+      #   - nome da branch (develop/main) -> sempre aponta para a última versão
+      - name: Definir tags da imagem (SHA do commit e branch)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=long,prefix=
+            type=ref,event=branch
+
+      # Build a partir do Dockerfile da raiz (multi-stage) e push para o GHCR.
+      # O cache do GitHub Actions (type=gha) reaproveita camadas como o
+      # "dotnet restore" entre execuções, deixando o pipeline mais rápido.
+      - name: Construir e publicar a imagem
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 3 - Deploy em STAGING
+  # Só em push na develop, depois que a imagem foi publicada.
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploy-staging:
+    name: Deploy em staging (Render)
+    needs: docker-image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    # O environment "staging" guarda seus próprios secrets/vars no GitHub
+    # (RENDER_DEPLOY_HOOK e APP_URL) e registra o histórico de deploys.
+    environment:
+      name: staging
+      url: ${{ vars.APP_URL }}
+    # Evita dois deploys simultâneos no mesmo ambiente; o novo espera o anterior
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+
+    steps:
+      # Os valores entram via variáveis de ambiente (e não direto no script)
+      # para não aparecerem expandidos no comando e evitar injeção de shell.
+      - name: Disparar deploy no Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::error::Secret RENDER_DEPLOY_HOOK não configurado no environment staging"
+            exit 1
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+          echo
+          echo "Deploy solicitado ao Render."
+
+      # Confirma que a aplicação está no ar: tenta HEALTH_CHECK_PATH a cada 20s por até
+      # 10 minutos (30 tentativas). Falha o job se nunca responder HTTP 200.
+      - name: Verificar saúde da aplicação (health check)
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "::error::Variável APP_URL não configurada no environment staging"
+            exit 1
+          fi
+          url="${APP_URL%/}${HEALTH_CHECK_PATH}"
+          for tentativa in $(seq 1 30); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$url" || true)
+            echo "Tentativa $tentativa/30: $url -> HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "Aplicação respondendo com HTTP 200."
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::A aplicação não respondeu HTTP 200 em 10 minutos"
+          exit 1
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 4 - Deploy em PRODUÇÃO
+  # Só em push na main, depois que a imagem foi publicada. Mesma lógica do
+  # staging; os secrets/vars têm o mesmo nome, mas os valores vêm do
+  # environment "production".
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploy-production:
+    name: Deploy em produção (Render)
+    needs: docker-image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Disparar deploy no Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::error::Secret RENDER_DEPLOY_HOOK não configurado no environment production"
+            exit 1
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
+          echo
+          echo "Deploy solicitado ao Render."
+
+      - name: Verificar saúde da aplicação (health check)
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "::error::Variável APP_URL não configurada no environment production"
+            exit 1
+          fi
+          url="${APP_URL%/}${HEALTH_CHECK_PATH}"
+          for tentativa in $(seq 1 30); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$url" || true)
+            echo "Tentativa $tentativa/30: $url -> HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "Aplicação respondendo com HTTP 200."
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "::error::A aplicação não respondeu HTTP 200 em 10 minutos"
+          exit 1

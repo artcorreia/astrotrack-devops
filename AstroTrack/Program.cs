@@ -13,6 +13,11 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ─── Porta (opcional, usada no container) ───────────────────────────────────
+var port = builder.Configuration["PORT"];
+if (!string.IsNullOrWhiteSpace(port))
+    builder.WebHost.UseUrls($"http://+:{port}");
+
 // ─── Controllers ───────────────────────────────────────────────────────────
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -124,6 +129,33 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+// ─── Migrations automáticas (opt-in via RUN_MIGRATIONS=true) ────────────────
+if (string.Equals(app.Configuration["RUN_MIGRATIONS"], "true", StringComparison.OrdinalIgnoreCase))
+{
+    // O Oracle pode demorar para aceitar conexões mesmo após o container subir
+    const int maxTentativas = 10;
+    var intervalo = TimeSpan.FromSeconds(10);
+
+    for (var tentativa = 1; ; tentativa++)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
+            app.Logger.LogInformation("Migrations aplicadas com sucesso");
+            break;
+        }
+        catch (Exception ex) when (tentativa < maxTentativas)
+        {
+            app.Logger.LogWarning(ex,
+                "Falha ao aplicar migrations (tentativa {Tentativa}/{MaxTentativas}). Nova tentativa em {Segundos}s",
+                tentativa, maxTentativas, intervalo.TotalSeconds);
+            Thread.Sleep(intervalo);
+        }
+    }
+}
 
 // ─── Middleware Pipeline ─────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
