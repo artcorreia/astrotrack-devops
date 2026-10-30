@@ -38,11 +38,22 @@ public class AutenticacaoSteps {
         autenticacaoService.login();
     }
 
-    @Quando("eu faço login com o e-mail correto e a senha {string}")
-    public void euFacoLoginComOEmailCorretoEASenha(String senha) {
+    @Quando("eu faço login com o e-mail correto e uma senha incorreta")
+    public void euFacoLoginComOEmailCorretoEUmaSenhaIncorreta() {
         autenticacaoService.loginModel.setEmail(autenticacaoService.registerModel.getEmail());
-        autenticacaoService.loginModel.setSenha(senha);
+        autenticacaoService.loginModel.setSenha(autenticacaoService.registerModel.getSenha() + "_incorreta");
         autenticacaoService.login();
+    }
+
+    @Quando("eu tento registrar outro usuário com o mesmo e-mail")
+    public void euTentoRegistrarOutroUsuarioComOMesmoEmail() {
+        autenticacaoService.registerModel.setUsuario(autenticacaoService.registerModel.getUsuario() + "_2");
+        autenticacaoService.registrar();
+    }
+
+    @Quando("eu chamo o endpoint GET {string} sem token")
+    public void euChamoOEndpointGetSemToken(String endpoint) {
+        autenticacaoService.getSemToken(endpoint);
     }
 
     @E("o corpo da resposta deve conter um token")

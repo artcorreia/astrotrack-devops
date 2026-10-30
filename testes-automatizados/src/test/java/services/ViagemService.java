@@ -3,34 +3,47 @@ package services;
 import io.restassured.response.Response;
 import model.ViagemModel;
 
-public class ViagemService extends BaseService {
+public class ViagemService extends CrudService {
 
     private final ClienteService clienteService = new ClienteService();
     private final MotoristaService motoristaService = new MotoristaService();
     private final VeiculoService veiculoService = new VeiculoService();
 
-    public Response criar(ViagemModel viagem) {
-        return post("/api/viagens", viagem);
+    @Override
+    public String recurso() {
+        return "viagem";
     }
 
-    public Response buscarPorId(long idViagem) {
-        return get("/api/viagens/" + idViagem);
+    @Override
+    protected String endpoint() {
+        return "/api/viagens";
     }
 
-    public Response excluir(long idViagem) {
-        return delete("/api/viagens/" + idViagem);
+    @Override
+    public String campoId() {
+        return "idViagem";
+    }
+
+    /** Viagem AGENDADA: pode ser alterada e excluída sem deixar dados presos no banco. */
+    @Override
+    protected ViagemModel modeloValido() {
+        return montarViagem("AGENDADA");
+    }
+
+    public Response listarPorStatus(String status) {
+        return get(endpoint() + "/status/" + status);
     }
 
     /**
-     * Monta os pré-requisitos (cliente, motorista e veículo novos) e cria uma viagem no status informado.
+     * Monta uma viagem no status informado com pré-requisitos novos (cliente, motorista e veículo).
      * Cada viagem usa motorista e veículo próprios, porque a API não deixa o mesmo motorista ou veículo
      * em duas viagens EM_ANDAMENTO ao mesmo tempo.
      */
-    public long criarViagemComStatus(String status) {
-        ViagemModel viagem = ViagemModel.builder()
-                .idCliente(clienteService.criarClienteAtivo())
-                .idMotorista(motoristaService.criarMotoristaAtivo())
-                .idVeiculo(veiculoService.criarVeiculoDisponivel())
+    public ViagemModel montarViagem(String status) {
+        return ViagemModel.builder()
+                .idCliente(clienteService.cadastrarEObterId())
+                .idMotorista(motoristaService.cadastrarEObterId())
+                .idVeiculo(veiculoService.cadastrarEObterId())
                 .origem("São Paulo - SP")
                 .destino("Campinas - SP")
                 .dataInicio("2026-01-10T08:00:00")
@@ -39,6 +52,9 @@ public class ViagemService extends BaseService {
                 .status(status)
                 .quilometragemTotal(95.5)
                 .build();
-        return exigirStatus(criar(viagem), 201, "criar viagem " + status).jsonPath().getLong("idViagem");
+    }
+
+    public long criarViagemComStatus(String status) {
+        return cadastrar(montarViagem(status)).get(campoId()).getAsLong();
     }
 }

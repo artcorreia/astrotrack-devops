@@ -1,23 +1,33 @@
 package services;
 
-import io.restassured.response.Response;
 import model.VeiculoModel;
 
-public class VeiculoService extends BaseService {
+public class VeiculoService extends CrudService {
 
-    public Response criar(VeiculoModel veiculo) {
-        return post("/api/veiculos", veiculo);
+    @Override
+    public String recurso() {
+        return "veículo";
     }
 
-    /** Cria um veículo DISPONIVEL com placa única e devolve o id gerado. */
-    public long criarVeiculoDisponivel() {
-        VeiculoModel veiculo = VeiculoModel.builder()
+    @Override
+    protected String endpoint() {
+        return "/api/veiculos";
+    }
+
+    @Override
+    public String campoId() {
+        return "idVeiculo";
+    }
+
+    /** Veículo DISPONIVEL com placa única. */
+    @Override
+    protected VeiculoModel modeloValido() {
+        return VeiculoModel.builder()
                 .placa(DadosUnicos.placa())
                 .modelo("Actros")
                 .marca("Mercedes-Benz")
                 .ano(2022)
                 .status("DISPONIVEL")
                 .build();
-        return exigirStatus(criar(veiculo), 201, "criar veículo").jsonPath().getLong("idVeiculo");
     }
 }

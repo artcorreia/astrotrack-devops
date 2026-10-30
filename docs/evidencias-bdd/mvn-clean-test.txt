@@ -1,0 +1,744 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< br.com.astrotrack:testes-automatizados >---------------
+[INFO] Building testes-automatizados 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] Loaded 24294 auto-discovered prefixes for remote repository central (prefixes-central.txt)
+[INFO] Loaded 74 auto-discovered prefixes for remote repository apache.snapshots (prefixes-apache.snapshots.txt)
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ testes-automatizados ---
+[INFO] Deleting C:\Users\arthu\source\repos\AstroTrack\testes-automatizados\target
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ testes-automatizados ---
+[INFO] skip non existing resourceDirectory C:\Users\arthu\source\repos\AstroTrack\testes-automatizados\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ testes-automatizados ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ testes-automatizados ---
+[INFO] Copying 18 resources from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ testes-automatizados ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 25 source files with javac [debug release 17] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ testes-automatizados ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junit4.JUnit4Provider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running runner.TestRunner
+
+@regressivo
+Cenário: Registrar usuário novo                                                      # src/test/resources/features/Autenticacao.feature:8
+  Dado que eu tenho um usuário novo com dados únicos                                 # steps.AutenticacaoSteps.queEuTenhoUmUsuarioNovoComDadosUnicos()
+  Quando eu registro esse usuário na API                                             # steps.AutenticacaoSteps.euRegistroEsseUsuarioNaApi()
+  Então o status code da resposta deve ser 201                                       # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter um token                                         # steps.AutenticacaoSteps.oCorpoDaRespostaDeveConterUmToken()
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+  E o corpo da resposta deve ser válido contra o schema "schemas/auth-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Registrar usuário com e-mail já cadastrado é recusado                    # src/test/resources/features/Autenticacao.feature:15
+  Dado que eu tenho um usuário novo com dados únicos                              # steps.AutenticacaoSteps.queEuTenhoUmUsuarioNovoComDadosUnicos()
+  E eu registro esse usuário na API                                               # steps.AutenticacaoSteps.euRegistroEsseUsuarioNaApi()
+  Quando eu tento registrar outro usuário com o mesmo e-mail                      # steps.AutenticacaoSteps.euTentoRegistrarOutroUsuarioComOMesmoEmail()
+  Então o status code da resposta deve ser 409                                    # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Já existe um usuário cadastrado com este e-mail" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Login com credenciais válidas retorna token                                 # src/test/resources/features/Autenticacao.feature:22
+  Dado que eu tenho um usuário novo com dados únicos                                 # steps.AutenticacaoSteps.queEuTenhoUmUsuarioNovoComDadosUnicos()
+  E eu registro esse usuário na API                                                  # steps.AutenticacaoSteps.euRegistroEsseUsuarioNaApi()
+  Quando eu faço login com o e-mail e a senha corretos                               # steps.AutenticacaoSteps.euFacoLoginComOEmailEASenhaCorretos()
+  Então o status code da resposta deve ser 200                                       # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter um token                                         # steps.AutenticacaoSteps.oCorpoDaRespostaDeveConterUmToken()
+  E o corpo da resposta deve ser válido contra o schema "schemas/auth-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Login com senha errada é recusado                        # src/test/resources/features/Autenticacao.feature:30
+  Dado que eu tenho um usuário novo com dados únicos              # steps.AutenticacaoSteps.queEuTenhoUmUsuarioNovoComDadosUnicos()
+  E eu registro esse usuário na API                               # steps.AutenticacaoSteps.euRegistroEsseUsuarioNaApi()
+  Quando eu faço login com o e-mail correto e uma senha incorreta # steps.AutenticacaoSteps.euFacoLoginComOEmailCorretoEUmaSenhaIncorreta()
+  Então o status code da resposta deve ser 401                    # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Credenciais inválidas"           # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Acessar endpoint protegido sem token é recusado # src/test/resources/features/Autenticacao.feature:43
+  Quando eu chamo o endpoint GET "/api/clientes" sem token          # steps.AutenticacaoSteps.euChamoOEndpointGetSemToken(java.lang.String)
+  Então o status code da resposta deve ser 401                      # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Esquema do Cenário: Acessar endpoint protegido sem token é recusado # src/test/resources/features/Autenticacao.feature:44
+  Quando eu chamo o endpoint GET "/api/motoristas" sem token        # steps.AutenticacaoSteps.euChamoOEndpointGetSemToken(java.lang.String)
+  Então o status code da resposta deve ser 401                      # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Esquema do Cenário: Acessar endpoint protegido sem token é recusado # src/test/resources/features/Autenticacao.feature:45
+  Quando eu chamo o endpoint GET "/api/veiculos" sem token          # steps.AutenticacaoSteps.euChamoOEndpointGetSemToken(java.lang.String)
+  Então o status code da resposta deve ser 401                      # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Esquema do Cenário: Acessar endpoint protegido sem token é recusado # src/test/resources/features/Autenticacao.feature:46
+  Quando eu chamo o endpoint GET "/api/viagens" sem token           # steps.AutenticacaoSteps.euChamoOEndpointGetSemToken(java.lang.String)
+  Então o status code da resposta deve ser 401                      # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Esquema do Cenário: Acessar endpoint protegido sem token é recusado # src/test/resources/features/Autenticacao.feature:47
+  Quando eu chamo o endpoint GET "/api/checkpoints" sem token       # steps.AutenticacaoSteps.euChamoOEndpointGetSemToken(java.lang.String)
+  Então o status code da resposta deve ser 401                      # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Listar checkpoints                                                                      # src/test/resources/features/Checkpoints.feature:11
+  Dado que estou autenticado na API                                                              # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um checkpoint cadastrado                                                       # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu listo os checkpoints                                                                 # steps.RecursosSteps.euListoOsRecursos(java.lang.String)
+  Então o status code da resposta deve ser 200                                                   # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a lista deve conter o checkpoint cadastrado                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/checkpoint-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Listar checkpoints de uma viagem                                                        # src/test/resources/features/Checkpoints.feature:18
+  Dado que estou autenticado na API                                                              # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um checkpoint cadastrado                                                       # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu listo os checkpoints da viagem cadastrada                                            # steps.CheckpointsSteps.euListoOsCheckpointsDaViagemCadastrada()
+  Então o status code da resposta deve ser 200                                                   # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E todos os checkpoints da lista devem ser da viagem cadastrada                                 # steps.CheckpointsSteps.todosOsCheckpointsDaListaDevemSerDaViagemCadastrada()
+  E a lista deve conter o checkpoint cadastrado                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/checkpoint-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Listar checkpoints de viagem inexistente                           # src/test/resources/features/Checkpoints.feature:26
+  Dado que estou autenticado na API                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu listo os checkpoints da viagem de id 999999999999               # steps.CheckpointsSteps.euListoOsCheckpointsDaViagemDeId(long)
+  Então o status code da resposta deve ser 404                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Viagem não localizada com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Buscar checkpoint por id                                                          # src/test/resources/features/Checkpoints.feature:31
+  Dado que estou autenticado na API                                                        # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um checkpoint cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu busco o checkpoint cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 200                                             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados do checkpoint cadastrado                      # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosDoRecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/checkpoint-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em checkpoint inexistente retorna 404 (busco)      # src/test/resources/features/Checkpoints.feature:45
+  Dado que estou autenticado na API                                             # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu busco o checkpoint de id 999999999999                               # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                                  # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Checkpoint não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em checkpoint inexistente retorna 404 (atualizo)   # src/test/resources/features/Checkpoints.feature:46
+  Dado que estou autenticado na API                                             # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu atualizo o checkpoint de id 999999999999                            # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                                  # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Checkpoint não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em checkpoint inexistente retorna 404 (excluo)     # src/test/resources/features/Checkpoints.feature:47
+  Dado que estou autenticado na API                                             # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu excluo o checkpoint de id 999999999999                              # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                                  # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Checkpoint não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Cadastrar checkpoint com dados válidos                                            # src/test/resources/features/Checkpoints.feature:49
+  Dado que estou autenticado na API                                                        # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um checkpoint com dados válidos                                       # steps.RecursosSteps.euCadastroUmRecursoComDadosValidos(java.lang.String)
+  Então o status code da resposta deve ser 201                                             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados enviados                                      # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosEnviados()
+  E o corpo da resposta deve ser válido contra o schema "schemas/checkpoint-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar checkpoint com dados inválidos (latitude)                     # src/test/resources/features/Checkpoints.feature:62
+  Dado que estou autenticado na API                                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um checkpoint com o campo "latitude" igual a "91"                      # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Latitude" deve ser "A latitude deve estar entre -90 e 90" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar checkpoint com dados inválidos (longitude)                        # src/test/resources/features/Checkpoints.feature:63
+  Dado que estou autenticado na API                                                             # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um checkpoint com o campo "longitude" igual a "-181"                       # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                                  # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Longitude" deve ser "A longitude deve estar entre -180 e 180" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar checkpoint com dados inválidos (botaoPanico)            # src/test/resources/features/Checkpoints.feature:64
+  Dado que estou autenticado na API                                                   # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um checkpoint com o campo "botaoPanico" igual a "2"              # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                        # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "BotaoPanico" deve ser "BotaoPanico deve ser 0 ou 1" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Cadastrar checkpoint em viagem inexistente é recusado                   # src/test/resources/features/Checkpoints.feature:66
+  Dado que estou autenticado na API                                              # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um checkpoint com o campo "idViagem" igual a "999999999999" # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 404                                   # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Viagem não localizada com id 999999999999"      # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Atualizar checkpoint                                                              # src/test/resources/features/Checkpoints.feature:71
+  Dado que estou autenticado na API                                                        # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um checkpoint cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu atualizo o campo "portaAberta" do checkpoint cadastrado para "1"               # steps.RecursosSteps.euAtualizoOCampoDoRecursoCadastrado(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200                                             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o campo "portaAberta" da resposta deve ser "1"                                         # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/checkpoint-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+  Quando eu busco o checkpoint cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o campo "portaAberta" da resposta deve ser "1"                                     # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Excluir checkpoint                       # src/test/resources/features/Checkpoints.feature:80
+  Dado que estou autenticado na API               # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um checkpoint cadastrado        # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo o checkpoint cadastrado        # steps.RecursosSteps.euExcluoORecursoCadastrado(java.lang.String)
+  Então o status code da resposta deve ser 204    # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco o checkpoint cadastrado pelo id # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 404    # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Listar clientes                                                                      # src/test/resources/features/Clientes.feature:11
+  Dado que estou autenticado na API                                                           # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um cliente cadastrado                                                       # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu listo os clientes                                                                 # steps.RecursosSteps.euListoOsRecursos(java.lang.String)
+  Então o status code da resposta deve ser 200                                                # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a lista deve conter o cliente cadastrado                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/cliente-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Buscar cliente por id                                                          # src/test/resources/features/Clientes.feature:18
+  Dado que estou autenticado na API                                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um cliente cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu busco o cliente cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 200                                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados do cliente cadastrado                      # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosDoRecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/cliente-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em cliente inexistente retorna 404 (busco)      # src/test/resources/features/Clientes.feature:32
+  Dado que estou autenticado na API                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu busco o cliente de id 999999999999                               # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Cliente não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em cliente inexistente retorna 404 (atualizo)   # src/test/resources/features/Clientes.feature:33
+  Dado que estou autenticado na API                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu atualizo o cliente de id 999999999999                            # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Cliente não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em cliente inexistente retorna 404 (excluo)     # src/test/resources/features/Clientes.feature:34
+  Dado que estou autenticado na API                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu excluo o cliente de id 999999999999                              # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Cliente não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Cadastrar cliente com dados válidos                                            # src/test/resources/features/Clientes.feature:36
+  Dado que estou autenticado na API                                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um cliente com dados válidos                                       # steps.RecursosSteps.euCadastroUmRecursoComDadosValidos(java.lang.String)
+  Então o status code da resposta deve ser 201                                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados enviados                                   # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosEnviados()
+  E o corpo da resposta deve ser válido contra o schema "schemas/cliente-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar cliente com dados inválidos (nome)        # src/test/resources/features/Clientes.feature:49
+  Dado que estou autenticado na API                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um cliente com o campo "nome" igual a "(ausente)"  # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Nome" deve ser "O nome é obrigatório" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar cliente com dados inválidos (email)                 # src/test/resources/features/Clientes.feature:50
+  Dado que estou autenticado na API                                               # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um cliente com o campo "email" igual a "email-invalido"      # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                    # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Email" deve ser "O e-mail informado é inválido" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar cliente com dados inválidos (cnpj)                               # src/test/resources/features/Clientes.feature:51
+  Dado que estou autenticado na API                                                            # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um cliente com o campo "cnpj" igual a "1234567890123456789"               # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                                 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Cnpj" deve ser "O CNPJ deve possuir no máximo 18 caracteres" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Cadastrar cliente com CNPJ já existente é recusado                  # src/test/resources/features/Clientes.feature:53
+  Dado que estou autenticado na API                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um cliente cadastrado                                      # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu cadastro outro cliente com o mesmo "cnpj"                        # steps.RecursosSteps.euCadastroOutroRecursoComOMesmoCampo(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 409                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Já existe cliente cadastrado com este CNPJ" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Atualizar cliente                                                              # src/test/resources/features/Clientes.feature:59
+  Dado que estou autenticado na API                                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um cliente cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu atualizo o campo "telefone" do cliente cadastrado para "11912345678"        # steps.RecursosSteps.euAtualizoOCampoDoRecursoCadastrado(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200                                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o campo "telefone" da resposta deve ser "11912345678"                               # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/cliente-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+  Quando eu busco o cliente cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o campo "telefone" da resposta deve ser "11912345678"                           # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Excluir cliente                       # src/test/resources/features/Clientes.feature:68
+  Dado que estou autenticado na API            # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um cliente cadastrado        # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo o cliente cadastrado        # steps.RecursosSteps.euExcluoORecursoCadastrado(java.lang.String)
+  Então o status code da resposta deve ser 204 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco o cliente cadastrado pelo id # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 404 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Excluir cliente vinculado a uma viagem é impedido # src/test/resources/features/Clientes.feature:77
+  Dado que estou autenticado na API                        # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem cadastrada                    # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo o cliente vinculado à viagem cadastrada # steps.RecursosSteps.euOperoORecursoVinculadoAViagem(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 500             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco o cliente vinculado à viagem cadastrada  # steps.RecursosSteps.euOperoORecursoVinculadoAViagem(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Listar motoristas                                                                      # src/test/resources/features/Motoristas.feature:11
+  Dado que estou autenticado na API                                                             # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um motorista cadastrado                                                       # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu listo os motoristas                                                                 # steps.RecursosSteps.euListoOsRecursos(java.lang.String)
+  Então o status code da resposta deve ser 200                                                  # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a lista deve conter o motorista cadastrado                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/motorista-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Buscar motorista por id                                                          # src/test/resources/features/Motoristas.feature:18
+  Dado que estou autenticado na API                                                       # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um motorista cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu busco o motorista cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 200                                            # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados do motorista cadastrado                      # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosDoRecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/motorista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em motorista inexistente retorna 404 (busco)      # src/test/resources/features/Motoristas.feature:32
+  Dado que estou autenticado na API                                            # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu busco o motorista de id 999999999999                               # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                                 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Motorista não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em motorista inexistente retorna 404 (atualizo)   # src/test/resources/features/Motoristas.feature:33
+  Dado que estou autenticado na API                                            # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu atualizo o motorista de id 999999999999                            # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                                 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Motorista não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em motorista inexistente retorna 404 (excluo)     # src/test/resources/features/Motoristas.feature:34
+  Dado que estou autenticado na API                                            # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu excluo o motorista de id 999999999999                              # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                                 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Motorista não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Cadastrar motorista com dados válidos                                            # src/test/resources/features/Motoristas.feature:36
+  Dado que estou autenticado na API                                                       # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um motorista com dados válidos                                       # steps.RecursosSteps.euCadastroUmRecursoComDadosValidos(java.lang.String)
+  Então o status code da resposta deve ser 201                                            # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados enviados                                     # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosEnviados()
+  E o corpo da resposta deve ser válido contra o schema "schemas/motorista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar motorista com dados inválidos (nome)                              # src/test/resources/features/Motoristas.feature:49
+  Dado que estou autenticado na API                                                             # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um motorista com o campo "nome" igual a "A"                                # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                                  # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Nome" deve ser "O nome deve possuir entre 2 e 100 caracteres" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar motorista com dados inválidos (cpf)       # src/test/resources/features/Motoristas.feature:50
+  Dado que estou autenticado na API                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um motorista com o campo "cpf" igual a "(ausente)" # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Cpf" deve ser "O CPF é obrigatório"   # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar motorista com dados inválidos (cnh)               # src/test/resources/features/Motoristas.feature:51
+  Dado que estou autenticado na API                                             # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um motorista com o campo "cnh" igual a "123456789012"      # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                  # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Cnh" deve ser "A CNH deve possuir 11 dígitos" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Cadastrar motorista com CPF já existente é recusado                  # src/test/resources/features/Motoristas.feature:53
+  Dado que estou autenticado na API                                           # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um motorista cadastrado                                     # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu cadastro outro motorista com o mesmo "cpf"                        # steps.RecursosSteps.euCadastroOutroRecursoComOMesmoCampo(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 409                                # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Já existe motorista cadastrado com este CPF" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Atualizar motorista                                                              # src/test/resources/features/Motoristas.feature:59
+  Dado que estou autenticado na API                                                       # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um motorista cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu atualizo o campo "status" do motorista cadastrado para "BLOQUEADO"            # steps.RecursosSteps.euAtualizoOCampoDoRecursoCadastrado(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200                                            # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o campo "status" da resposta deve ser "BLOQUEADO"                                     # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/motorista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+  Quando eu busco o motorista cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o campo "status" da resposta deve ser "BLOQUEADO"                                 # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Excluir motorista                       # src/test/resources/features/Motoristas.feature:68
+  Dado que estou autenticado na API              # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um motorista cadastrado        # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo o motorista cadastrado        # steps.RecursosSteps.euExcluoORecursoCadastrado(java.lang.String)
+  Então o status code da resposta deve ser 204   # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco o motorista cadastrado pelo id # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 404   # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Excluir motorista vinculado a uma viagem é impedido # src/test/resources/features/Motoristas.feature:77
+  Dado que estou autenticado na API                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem cadastrada                      # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo o motorista vinculado à viagem cadastrada # steps.RecursosSteps.euOperoORecursoVinculadoAViagem(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 500               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco o motorista vinculado à viagem cadastrada  # steps.RecursosSteps.euOperoORecursoVinculadoAViagem(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Registrar checkpoint em viagem em andamento                                       # src/test/resources/features/Rastreabilidade.feature:16
+  Dado que estou autenticado na API                                                        # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "EM_ANDAMENTO"                                     # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu registro um checkpoint nessa viagem com os dados:                              # steps.RastreabilidadeSteps.euRegistroUmCheckpointNessaViagemComOsDados(java.util.Map<java.lang.String, java.lang.String>)
+    | latitude     | -23.5505200         |
+    | longitude    | -46.6333080         |
+    | dataRegistro | 2026-01-10T09:30:00 |
+    | botaoPanico  | 0                   |
+    | portaAberta  | 0                   |
+  Então o status code da resposta deve ser 201                                             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados do checkpoint enviado                         # steps.RastreabilidadeSteps.oCorpoDaRespostaDeveConterOsDadosDoCheckpointEnviado()
+  E o corpo da resposta deve ser válido contra o schema "schemas/checkpoint-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Registrar checkpoint em viagem finalizada é recusado                                # src/test/resources/features/Rastreabilidade.feature:28
+  Dado que estou autenticado na API                                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "FINALIZADA"                                         # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu registro um checkpoint nessa viagem com os dados:                                # steps.RastreabilidadeSteps.euRegistroUmCheckpointNessaViagemComOsDados(java.util.Map<java.lang.String, java.lang.String>)
+    | latitude     | -22.9056400         |
+    | longitude    | -47.0608300         |
+    | dataRegistro | 2026-01-10T13:00:00 |
+    | botaoPanico  | 0                   |
+    | portaAberta  | 0                   |
+  Então o status code da resposta deve ser 400                                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Não é possível registrar checkpoints em viagens encerradas" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Excluir viagem em andamento é bloqueado                                 # src/test/resources/features/Rastreabilidade.feature:39
+  Dado que estou autenticado na API                                              # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "EM_ANDAMENTO"                           # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu excluo essa viagem                                                   # steps.RastreabilidadeSteps.euExcluoEssaViagem()
+  Então o status code da resposta deve ser 400                                   # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Não é possível remover uma viagem em andamento" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Consultar viagem inexistente                                       # src/test/resources/features/Rastreabilidade.feature:45
+  Dado que estou autenticado na API                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu consulto a viagem de id 999999999999                            # steps.RastreabilidadeSteps.euConsultoAViagemDeId(long)
+  Então o status code da resposta deve ser 404                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Viagem não localizada com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Listar veículos                                                                      # src/test/resources/features/Veiculos.feature:11
+  Dado que estou autenticado na API                                                           # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um veículo cadastrado                                                       # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu listo os veículos                                                                 # steps.RecursosSteps.euListoOsRecursos(java.lang.String)
+  Então o status code da resposta deve ser 200                                                # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a lista deve conter o veículo cadastrado                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/veiculo-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Buscar veículo por id                                                          # src/test/resources/features/Veiculos.feature:18
+  Dado que estou autenticado na API                                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um veículo cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu busco o veículo cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 200                                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados do veículo cadastrado                      # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosDoRecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/veiculo-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em veículo inexistente retorna 404 (busco)      # src/test/resources/features/Veiculos.feature:32
+  Dado que estou autenticado na API                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu busco o veículo de id 999999999999                               # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Veículo não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em veículo inexistente retorna 404 (atualizo)   # src/test/resources/features/Veiculos.feature:33
+  Dado que estou autenticado na API                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu atualizo o veículo de id 999999999999                            # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Veículo não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em veículo inexistente retorna 404 (excluo)     # src/test/resources/features/Veiculos.feature:34
+  Dado que estou autenticado na API                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu excluo o veículo de id 999999999999                              # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Veículo não localizado com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Cadastrar veículo com dados válidos                                            # src/test/resources/features/Veiculos.feature:36
+  Dado que estou autenticado na API                                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um veículo com dados válidos                                       # steps.RecursosSteps.euCadastroUmRecursoComDadosValidos(java.lang.String)
+  Então o status code da resposta deve ser 201                                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados enviados                                   # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosEnviados()
+  E o corpo da resposta deve ser válido contra o schema "schemas/veiculo-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar veículo com dados inválidos (placa)                                             # src/test/resources/features/Veiculos.feature:49
+  Dado que estou autenticado na API                                                                           # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um veículo com o campo "placa" igual a "abc1d23"                                         # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                                                # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Placa" deve ser "A placa deve seguir o padrão Mercosul ou antigo sem hífen" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar veículo com dados inválidos (ano)                      # src/test/resources/features/Veiculos.feature:50
+  Dado que estou autenticado na API                                                  # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um veículo com o campo "ano" igual a "1970"                     # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                       # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Ano" deve ser "O ano deve estar entre 1980 e 2100" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar veículo com dados inválidos (modelo)          # src/test/resources/features/Veiculos.feature:51
+  Dado que estou autenticado na API                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro um veículo com o campo "modelo" igual a "(ausente)"    # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Modelo" deve ser "O modelo é obrigatório" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Cadastrar veículo com placa já existente é recusado                  # src/test/resources/features/Veiculos.feature:53
+  Dado que estou autenticado na API                                           # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um veículo cadastrado                                       # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu cadastro outro veículo com o mesmo "placa"                        # steps.RecursosSteps.euCadastroOutroRecursoComOMesmoCampo(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 409                                # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Já existe veículo cadastrado com esta placa" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Atualizar veículo                                                              # src/test/resources/features/Veiculos.feature:59
+  Dado que estou autenticado na API                                                     # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um veículo cadastrado                                                 # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu atualizo o campo "status" do veículo cadastrado para "EM_MANUTENCAO"        # steps.RecursosSteps.euAtualizoOCampoDoRecursoCadastrado(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200                                          # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o campo "status" da resposta deve ser "EM_MANUTENCAO"                               # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/veiculo-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+  Quando eu busco o veículo cadastrado pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o campo "status" da resposta deve ser "EM_MANUTENCAO"                           # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Excluir veículo                       # src/test/resources/features/Veiculos.feature:68
+  Dado que estou autenticado na API            # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe um veículo cadastrado        # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo o veículo cadastrado        # steps.RecursosSteps.euExcluoORecursoCadastrado(java.lang.String)
+  Então o status code da resposta deve ser 204 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco o veículo cadastrado pelo id # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 404 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Excluir veículo vinculado a uma viagem é impedido # src/test/resources/features/Veiculos.feature:77
+  Dado que estou autenticado na API                        # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem cadastrada                    # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo o veículo vinculado à viagem cadastrada # steps.RecursosSteps.euOperoORecursoVinculadoAViagem(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 500             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco o veículo vinculado à viagem cadastrada  # steps.RecursosSteps.euOperoORecursoVinculadoAViagem(java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200             # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+@regressivo
+Cenário: Listar viagens                                                                      # src/test/resources/features/Viagens.feature:11
+  Dado que estou autenticado na API                                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem cadastrada                                                      # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu listo as viagens                                                                 # steps.RecursosSteps.euListoOsRecursos(java.lang.String)
+  Então o status code da resposta deve ser 200                                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a lista deve conter a viagem cadastrada                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Listar viagens por status AGENDADA                                       # src/test/resources/features/Viagens.feature:28
+  Dado que estou autenticado na API                                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "AGENDADA"                                           # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu listo as viagens com status "AGENDADA"                                           # steps.ViagensSteps.euListoAsViagensComStatus(java.lang.String)
+  Então o status code da resposta deve ser 200                                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E todos os itens da lista devem ter o campo "status" igual a "AGENDADA"                    # steps.RecursosSteps.todosOsItensDaListaDevemTerOCampoIgualA(java.lang.String,java.lang.String)
+  E a lista deve conter a viagem cadastrada                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Listar viagens por status EM_ANDAMENTO                                   # src/test/resources/features/Viagens.feature:29
+  Dado que estou autenticado na API                                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "EM_ANDAMENTO"                                       # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu listo as viagens com status "EM_ANDAMENTO"                                       # steps.ViagensSteps.euListoAsViagensComStatus(java.lang.String)
+  Então o status code da resposta deve ser 200                                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E todos os itens da lista devem ter o campo "status" igual a "EM_ANDAMENTO"                # steps.RecursosSteps.todosOsItensDaListaDevemTerOCampoIgualA(java.lang.String,java.lang.String)
+  E a lista deve conter a viagem cadastrada                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Listar viagens por status FINALIZADA                                     # src/test/resources/features/Viagens.feature:30
+  Dado que estou autenticado na API                                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "FINALIZADA"                                         # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu listo as viagens com status "FINALIZADA"                                         # steps.ViagensSteps.euListoAsViagensComStatus(java.lang.String)
+  Então o status code da resposta deve ser 200                                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E todos os itens da lista devem ter o campo "status" igual a "FINALIZADA"                  # steps.RecursosSteps.todosOsItensDaListaDevemTerOCampoIgualA(java.lang.String,java.lang.String)
+  E a lista deve conter a viagem cadastrada                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Listar viagens por status CANCELADA                                      # src/test/resources/features/Viagens.feature:31
+  Dado que estou autenticado na API                                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "CANCELADA"                                          # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu listo as viagens com status "CANCELADA"                                          # steps.ViagensSteps.euListoAsViagensComStatus(java.lang.String)
+  Então o status code da resposta deve ser 200                                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E todos os itens da lista devem ter o campo "status" igual a "CANCELADA"                   # steps.RecursosSteps.todosOsItensDaListaDevemTerOCampoIgualA(java.lang.String,java.lang.String)
+  E a lista deve conter a viagem cadastrada                                                  # steps.RecursosSteps.aListaDeveConterORecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-lista-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Listar viagens com status inexistente é recusado                           # src/test/resources/features/Viagens.feature:33
+  Dado que estou autenticado na API                                                 # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu listo as viagens com status "XPTO"                                      # steps.ViagensSteps.euListoAsViagensComStatus(java.lang.String)
+  Então o status code da resposta deve ser 400                                      # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "status" deve ser "The value 'XPTO' is not valid." # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Buscar viagem por id                                                          # src/test/resources/features/Viagens.feature:38
+  Dado que estou autenticado na API                                                    # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem cadastrada                                                # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu busco a viagem cadastrada pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 200                                         # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados da viagem cadastrada                      # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosDoRecursoCadastrado(java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em viagem inexistente retorna 404 (busco)      # src/test/resources/features/Viagens.feature:52
+  Dado que estou autenticado na API                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu busco a viagem de id 999999999999                               # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Viagem não localizada com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em viagem inexistente retorna 404 (atualizo)   # src/test/resources/features/Viagens.feature:53
+  Dado que estou autenticado na API                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu atualizo a viagem de id 999999999999                            # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Viagem não localizada com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Operação em viagem inexistente retorna 404 (excluo)     # src/test/resources/features/Viagens.feature:54
+  Dado que estou autenticado na API                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu excluo a viagem de id 999999999999                              # steps.RecursosSteps.euExecutoOperacaoNoRecursoDeId(java.lang.String,java.lang.String,long)
+  Então o status code da resposta deve ser 404                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Viagem não localizada com id 999999999999" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Cadastrar viagem com dados válidos                                            # src/test/resources/features/Viagens.feature:56
+  Dado que estou autenticado na API                                                    # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro uma viagem com dados válidos                                      # steps.RecursosSteps.euCadastroUmRecursoComDadosValidos(java.lang.String)
+  Então o status code da resposta deve ser 201                                         # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o corpo da resposta deve conter os dados enviados                                  # steps.RecursosSteps.oCorpoDaRespostaDeveConterOsDadosEnviados()
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+
+@regressivo
+Cenário: Cadastrar viagem sem origem é recusado                             # src/test/resources/features/Viagens.feature:62
+  Dado que estou autenticado na API                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro uma viagem com o campo "origem" igual a "(ausente)"    # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o erro de validação do campo "Origem" deve ser "A origem é obrigatória" # steps.ComumSteps.oErroDeValidacaoDoCampoDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar viagem violando regra de negócio (finalizada sem data de fim) # src/test/resources/features/Viagens.feature:74
+  Dado que estou autenticado na API                                                         # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro uma viagem com o campo "status" igual a "FINALIZADA"                   # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                              # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Viagens finalizadas precisam informar data de fim"         # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar viagem violando regra de negócio (data de fim antes do início) # src/test/resources/features/Viagens.feature:75
+  Dado que estou autenticado na API                                                          # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro uma viagem com o campo "dataFim" igual a "2026-01-09T08:00:00"          # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 400                                               # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "A data de fim não pode ser anterior à data de início"       # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar viagem violando regra de negócio (cliente inexistente) # src/test/resources/features/Viagens.feature:76
+  Dado que estou autenticado na API                                                  # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro uma viagem com o campo "idCliente" igual a "999999999999"       # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 404                                       # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Cliente não localizado com id 999999999999"         # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar viagem violando regra de negócio (motorista inexistente) # src/test/resources/features/Viagens.feature:77
+  Dado que estou autenticado na API                                                    # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro uma viagem com o campo "idMotorista" igual a "999999999999"       # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 404                                         # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Motorista não localizado com id 999999999999"         # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Esquema do Cenário: Cadastrar viagem violando regra de negócio (veículo inexistente) # src/test/resources/features/Viagens.feature:78
+  Dado que estou autenticado na API                                                  # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Quando eu cadastro uma viagem com o campo "idVeiculo" igual a "999999999999"       # steps.RecursosSteps.euCadastroUmRecursoComOCampoIgualA(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 404                                       # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Veículo não localizado com id 999999999999"         # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Cadastrar viagem em andamento com motorista já em viagem é recusado                       # src/test/resources/features/Viagens.feature:80
+  Dado que estou autenticado na API                                                                # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem com status "EM_ANDAMENTO"                                             # steps.RastreabilidadeSteps.queExisteUmaViagemComStatus(java.lang.String)
+  Quando eu cadastro uma nova viagem "EM_ANDAMENTO" com o motorista da viagem cadastrada           # steps.ViagensSteps.euCadastroUmaNovaViagemComOMotoristaDaViagemCadastrada(java.lang.String)
+  Então o status code da resposta deve ser 409                                                     # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E a mensagem de erro deve ser "Motorista ou veículo já está vinculado a uma viagem em andamento" # steps.ComumSteps.aMensagemDeErroDeveSer(java.lang.String)
+
+@regressivo
+Cenário: Atualizar viagem                                                              # src/test/resources/features/Viagens.feature:86
+  Dado que estou autenticado na API                                                    # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem cadastrada                                                # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu atualizo o campo "destino" da viagem cadastrada para "Ribeirão Preto - SP" # steps.RecursosSteps.euAtualizoOCampoDoRecursoCadastrado(java.lang.String,java.lang.String,java.lang.String)
+  Então o status code da resposta deve ser 200                                         # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  E o campo "destino" da resposta deve ser "Ribeirão Preto - SP"                       # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+  E o corpo da resposta deve ser válido contra o schema "schemas/viagem-response.json" # steps.ComumSteps.oCorpoDaRespostaDeveSerValidoContraOSchema(java.lang.String)
+  Quando eu busco a viagem cadastrada pelo id                                          # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o campo "destino" da resposta deve ser "Ribeirão Preto - SP"                   # steps.RecursosSteps.oCampoDaRespostaDeveSer(java.lang.String,java.lang.String)
+
+@regressivo
+Cenário: Excluir viagem agendada               # src/test/resources/features/Viagens.feature:95
+  Dado que estou autenticado na API            # steps.AutenticacaoSteps.queEstouAutenticadoNaApi()
+  Dado que existe uma viagem cadastrada        # steps.RecursosSteps.queExisteUmRecursoCadastrado(java.lang.String)
+  Quando eu excluo a viagem cadastrada         # steps.RecursosSteps.euExcluoORecursoCadastrado(java.lang.String)
+  Então o status code da resposta deve ser 204 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+  Quando eu busco a viagem cadastrada pelo id  # steps.RecursosSteps.euBuscoORecursoCadastradoPeloId(java.lang.String)
+  Então o status code da resposta deve ser 404 # steps.ComumSteps.oStatusCodeDaRespostaDeveSer(int)
+
+86 Scenarios (86 passed)
+423 Steps (423 passed)
+0m27,630s
+
+
+[INFO] Tests run: 86, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.17 s -- in runner.TestRunner
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 86, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  34.538 s
+[INFO] Finished at: 2026-10-29T22:35:51-03:00
+[INFO] ------------------------------------------------------------------------

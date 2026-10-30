@@ -3,6 +3,7 @@ package steps;
 import com.networknt.schema.ValidationMessage;
 import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Entao;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import services.BaseService;
 
@@ -30,5 +31,14 @@ public class ComumSteps {
     public void aMensagemDeErroDeveSer(String mensagem) {
         JSONObject corpo = new JSONObject(BaseService.getUltimaResposta().asString());
         assertEquals(mensagem, corpo.getString("mensagem"));
+    }
+
+    /** Erros de validação dos DTOs voltam no formato ProblemDetails do ASP.NET: errors.Campo = [mensagens]. */
+    @E("o erro de validação do campo {string} deve ser {string}")
+    public void oErroDeValidacaoDoCampoDeveSer(String campo, String mensagem) {
+        JSONObject corpo = new JSONObject(BaseService.getUltimaResposta().asString());
+        JSONArray mensagens = corpo.getJSONObject("errors").optJSONArray(campo);
+        assertTrue("Sem erro de validação para o campo " + campo + ": " + corpo,
+                mensagens != null && mensagens.toList().contains(mensagem));
     }
 }

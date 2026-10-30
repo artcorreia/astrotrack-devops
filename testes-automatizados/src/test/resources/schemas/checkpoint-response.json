@@ -3,6 +3,7 @@
   "title": "CheckpointResponse",
   "type": "object",
   "required": ["idCheckpoint", "idViagem", "latitude", "longitude", "dataRegistro", "botaoPanico", "portaAberta"],
+  "additionalProperties": false,
   "properties": {
     "idCheckpoint": { "type": "integer", "minimum": 1 },
     "idViagem": { "type": "integer", "minimum": 1 },

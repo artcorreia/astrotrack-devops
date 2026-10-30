@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MotoristaResponse",
+  "type": "object",
+  "required": ["idMotorista", "nome", "cpf", "cnh", "telefone", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "idMotorista": { "type": "integer", "minimum": 1 },
+    "nome": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "cpf": { "type": "string", "maxLength": 14 },
+    "cnh": { "type": "string", "maxLength": 11 },
+    "telefone": { "type": "string", "maxLength": 20 },
+    "status": { "type": "string", "enum": ["ATIVO", "INATIVO", "BLOQUEADO"] }
+  }
+}

@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
         features = "src/test/resources/features",
         glue = "steps",
         tags = "@regressivo",
-        plugin = {"pretty", "html:target/cucumber-reports.html"}
+        plugin = {"pretty", "summary", "html:target/cucumber-reports.html"}
 )
 public class TestRunner {
 }

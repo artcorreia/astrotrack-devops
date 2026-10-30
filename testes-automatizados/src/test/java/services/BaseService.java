@@ -2,16 +2,17 @@ package services;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.networknt.schema.InputFormat;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SchemaLocation;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-import java.io.InputStream;
 import java.util.Set;
 
 import static io.restassured.RestAssured.given;
@@ -30,6 +31,7 @@ public abstract class BaseService {
 
     private static String token;
     private static Response ultimaResposta;
+    private static JsonElement ultimoCorpoEnviado;
 
     public static void definirToken(String novoToken) {
         token = novoToken;
@@ -39,9 +41,15 @@ public abstract class BaseService {
         return ultimaResposta;
     }
 
+    public static JsonElement getUltimoCorpoEnviado() {
+        return ultimoCorpoEnviado;
+    }
+
     public static void limparContexto() {
         token = null;
         ultimaResposta = null;
+        ultimoCorpoEnviado = null;
+        ContextoRecursos.limpar();
     }
 
     private RequestSpecification requisicao() {
@@ -53,7 +61,14 @@ public abstract class BaseService {
     }
 
     protected Response post(String endpoint, Object body) {
+        ultimoCorpoEnviado = gson.toJsonTree(body);
         ultimaResposta = requisicao().body(gson.toJson(body)).when().post(endpoint).then().extract().response();
+        return ultimaResposta;
+    }
+
+    protected Response put(String endpoint, Object body) {
+        ultimoCorpoEnviado = gson.toJsonTree(body);
+        ultimaResposta = requisicao().body(gson.toJson(body)).when().put(endpoint).then().extract().response();
         return ultimaResposta;
     }
 
@@ -76,12 +91,13 @@ public abstract class BaseService {
         return response;
     }
 
+    /** Valida a última resposta contra um schema do classpath; $ref relativos (ex.: listas) são resolvidos na mesma pasta. */
     public static Set<ValidationMessage> validarSchema(String schemaPath) {
-        InputStream schemaStream = BaseService.class.getClassLoader().getResourceAsStream(schemaPath);
-        if (schemaStream == null) {
+        if (BaseService.class.getClassLoader().getResource(schemaPath) == null) {
             throw new IllegalArgumentException("Schema não encontrado: " + schemaPath);
         }
-        JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7).getSchema(schemaStream);
+        JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)
+                .getSchema(SchemaLocation.of("classpath:" + schemaPath));
         return schema.validate(ultimaResposta.getBody().asString(), InputFormat.JSON);
     }
 }

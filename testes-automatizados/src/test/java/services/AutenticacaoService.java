@@ -27,6 +27,12 @@ public class AutenticacaoService extends BaseService {
         return post("/api/auth/login", loginModel);
     }
 
+    /** GET em um endpoint protegido sem enviar o header Authorization. */
+    public Response getSemToken(String endpoint) {
+        definirToken(null);
+        return get(endpoint);
+    }
+
     /** Registra um usuário novo, faz login e guarda o token para os próximos requests. */
     public void autenticar() {
         prepararUsuarioUnico();
