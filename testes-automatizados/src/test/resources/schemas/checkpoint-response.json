@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CheckpointResponse",
+  "type": "object",
+  "required": ["idCheckpoint", "idViagem", "latitude", "longitude", "dataRegistro", "botaoPanico", "portaAberta"],
+  "properties": {
+    "idCheckpoint": { "type": "integer", "minimum": 1 },
+    "idViagem": { "type": "integer", "minimum": 1 },
+    "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+    "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+    "dataRegistro": { "type": "string" },
+    "botaoPanico": { "type": "integer", "enum": [0, 1] },
+    "portaAberta": { "type": "integer", "enum": [0, 1] }
+  }
+}

@@ -1,61 +1,41 @@
 package services;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.networknt.schema.InputFormat;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
-import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import model.LoginModel;
 import model.RegisterModel;
 
-import java.io.InputStream;
-import java.util.Set;
+public class AutenticacaoService extends BaseService {
 
-import static io.restassured.RestAssured.given;
-
-public class AutenticacaoService {
-
-    private static final String BASE_URL =
-            System.getenv().getOrDefault("API_BASE_URL", "http://localhost:8080");
-
-    private final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+    private static final String SENHA_PADRAO = "Senha@123";
 
     public final RegisterModel registerModel = new RegisterModel();
     public final LoginModel loginModel = new LoginModel();
-    public Response response;
+
+    /** Preenche o registerModel com usuário e e-mail únicos por execução. */
+    public void prepararUsuarioUnico() {
+        String sufixo = String.valueOf(DadosUnicos.proximo());
+        registerModel.setUsuario("bdd_" + sufixo);
+        registerModel.setEmail("bdd_" + sufixo + "@astrotrack.com");
+        registerModel.setSenha(SENHA_PADRAO);
+    }
 
     public Response registrar() {
-        response = post("/api/auth/register", gson.toJson(registerModel));
-        return response;
+        return post("/api/auth/register", registerModel);
     }
 
     public Response login() {
-        response = post("/api/auth/login", gson.toJson(loginModel));
-        return response;
+        return post("/api/auth/login", loginModel);
     }
 
-    private Response post(String endpoint, String body) {
-        return given()
-                .baseUri(BASE_URL)
-                .contentType(ContentType.JSON)
-                .body(body)
-                .when()
-                .post(endpoint)
-                .then()
-                .extract()
-                .response();
-    }
+    /** Registra um usuário novo, faz login e guarda o token para os próximos requests. */
+    public void autenticar() {
+        prepararUsuarioUnico();
+        exigirStatus(registrar(), 201, "registrar usuário");
 
-    public Set<ValidationMessage> validarSchema(String schemaPath) {
-        InputStream schemaStream = getClass().getClassLoader().getResourceAsStream(schemaPath);
-        if (schemaStream == null) {
-            throw new IllegalArgumentException("Schema não encontrado: " + schemaPath);
-        }
-        JsonSchema schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7).getSchema(schemaStream);
-        return schema.validate(response.getBody().asString(), InputFormat.JSON);
+        loginModel.setEmail(registerModel.getEmail());
+        loginModel.setSenha(registerModel.getSenha());
+        Response response = exigirStatus(login(), 200, "fazer login");
+
+        definirToken(response.jsonPath().getString("token"));
     }
 }
