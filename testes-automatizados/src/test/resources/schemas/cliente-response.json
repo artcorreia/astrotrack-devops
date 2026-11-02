@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ClienteResponse",
+  "type": "object",
+  "required": ["idCliente", "nome", "cnpj", "email", "telefone", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "idCliente": { "type": "integer", "minimum": 1 },
+    "nome": { "type": "string", "minLength": 2, "maxLength": 100 },
+    "cnpj": { "type": "string", "maxLength": 18 },
+    "email": { "type": "string", "maxLength": 120 },
+    "telefone": { "type": "string", "maxLength": 20 },
+    "status": { "type": "string", "enum": ["ATIVO", "INATIVO", "BLOQUEADO"] }
+  }
+}

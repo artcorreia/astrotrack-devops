@@ -78,6 +78,22 @@ dotnet test
 
 ---
 
+## Testes automatizados (BDD)
+
+Testes BDD (Cucumber + Gherkin) e de API (status code, corpo JSON e contrato JSON Schema): **86 cenários cobrindo os 29
+endpoints**. Para rodar só com Docker, na raiz do repositório:
+
+```bash
+docker compose --profile testes run --rm testes
+```
+
+O comando sobe o Oracle e a API, se precisar, e espera a API responder antes de começar. O relatório HTML fica em
+`testes-automatizados/relatorios/cucumber-reports.html`. No pipeline, esses testes rodam no job "Testes BDD e de API
+(Cucumber)" e bloqueiam o deploy se falharem. Execução local com Maven, estrutura, cobertura e defeitos encontrados:
+[`testes-automatizados/README.md`](testes-automatizados/README.md).
+
+---
+
 ## Pipeline CI/CD
 
 ### Ferramentas

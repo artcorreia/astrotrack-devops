@@ -2,13 +2,16 @@
 # AstroTrack - Pipeline CI/CD
 #
 # Fluxo:
-#   1. build-and-test     -> compila e roda os testes (em todo push e PR)
-#   2. docker-image       -> gera a imagem Docker e publica no GHCR (só em push)
-#   3. deploy-staging     -> publica no Render (staging)   - push na develop
-#   4. deploy-production  -> publica no Render (produção)  - push na main
+#   1. build-and-test     -> compila e roda os testes unitários (todo push e PR)
+#   2. testes-bdd         -> sobe API + Oracle e roda os testes BDD/API (Cucumber)
+#                            (todo push e PR)
+#   3. docker-image       -> gera a imagem Docker e publica no GHCR (só em push)
+#   4. deploy-staging     -> publica no Render (staging)   - push na develop
+#   5. deploy-production  -> publica no Render (produção)  - push na main
 #
 # Cada job só roda se o anterior passar: código que não compila ou com teste
-# falhando nunca vira imagem, e imagem que não foi gerada nunca vai para deploy.
+# (unitário ou BDD) falhando nunca vira imagem, e imagem que não foi gerada
+# nunca vai para deploy.
 # ═════════════════════════════════════════════════════════════════════════════
 
 name: CI/CD AstroTrack
@@ -91,12 +94,90 @@ jobs:
           retention-days: 30
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # Job 2 - Imagem Docker
-  # Só em push (não em PR) e só se o build e os testes passaram.
+  # Job 2 - Testes BDD e de API (Cucumber)
+  # Roda sempre (push e PR), depois do build e dos testes unitários. Sobe o
+  # ambiente completo (Oracle + API) com o docker-compose e roda os cenários
+  # de testes-automatizados/ contra a API de verdade, pelo container de testes.
+  # ═══════════════════════════════════════════════════════════════════════════
+  testes-bdd:
+    name: Testes BDD e de API (Cucumber)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v7
+
+      # O docker-compose exige um .env. O ambiente do runner é descartável e só
+      # existe durante este job, então os valores de exemplo do .env.example
+      # bastam: nenhum segredo real é usado aqui.
+      - name: Criar .env a partir do .env.example
+        run: cp .env.example .env
+
+      # Builda a imagem da API e sobe API + Oracle. O depends_on do compose só
+      # inicia a API depois que o healthcheck do Oracle passa.
+      - name: Subir a API e o Oracle (docker compose)
+        run: docker compose up -d --build api
+
+      # O Oracle fica healthy antes de a API terminar de subir e aplicar as
+      # migrations; tenta HEALTH_CHECK_PATH a cada 5s por até 5 minutos.
+      - name: Aguardar a API responder
+        run: |
+          url="http://localhost:8080${HEALTH_CHECK_PATH}"
+          for tentativa in $(seq 1 60); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$url" || true)
+            echo "Tentativa $tentativa/60: $url -> HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "API respondendo com HTTP 200."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::A API não respondeu HTTP 200 em 5 minutos"
+          exit 1
+
+      # Mesmo comando usado localmente. O container de testes fica na rede
+      # astrotrack-net (API_BASE_URL=http://api:8080) e grava o relatório em
+      # testes-automatizados/relatorios/. -T: o runner não tem terminal (TTY).
+      - name: Executar os testes BDD (container de testes)
+        run: docker compose --profile testes run --rm -T --build testes
+
+      # cucumber-reports.html + saída completa do Maven (saida-testes.txt).
+      # "always()" para publicar também quando algum cenário falha.
+      - name: Publicar relatório do Cucumber e saída dos testes (artifact)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-testes-bdd
+          path: testes-automatizados/relatorios/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Mostrar logs da API e do Oracle (em caso de falha)
+        if: failure()
+        run: |
+          docker compose ps -a
+          echo "::group::Logs da API"
+          docker compose logs --no-color --timestamps api
+          echo "::endgroup::"
+          echo "::group::Logs do Oracle (últimas 200 linhas)"
+          docker compose logs --no-color --timestamps --tail 200 oracle
+          echo "::endgroup::"
+
+      # Remove containers, rede e o volume do Oracle, mesmo se algo falhou
+      - name: Derrubar o ambiente (docker compose down -v)
+        if: always()
+        run: docker compose --profile testes down -v --remove-orphans
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 3 - Imagem Docker
+  # Só em push (não em PR) e só se o build, os testes unitários e os testes
+  # BDD passaram.
   # ═══════════════════════════════════════════════════════════════════════════
   docker-image:
     name: Build e publicação da imagem Docker (GHCR)
-    needs: build-and-test
+    needs: [build-and-test, testes-bdd]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     # GITHUB_TOKEN precisa de "packages: write" para publicar no GHCR
@@ -147,12 +228,12 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # Job 3 - Deploy em STAGING
+  # Job 4 - Deploy em STAGING
   # Só em push na develop, depois que a imagem foi publicada.
   # ═══════════════════════════════════════════════════════════════════════════
   deploy-staging:
     name: Deploy em staging (Render)
-    needs: docker-image
+    needs: [docker-image, testes-bdd]
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     # O environment "staging" guarda seus próprios secrets/vars no GitHub
@@ -204,14 +285,14 @@ jobs:
           exit 1
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # Job 4 - Deploy em PRODUÇÃO
+  # Job 5 - Deploy em PRODUÇÃO
   # Só em push na main, depois que a imagem foi publicada. Mesma lógica do
   # staging; os secrets/vars têm o mesmo nome, mas os valores vêm do
   # environment "production".
   # ═══════════════════════════════════════════════════════════════════════════
   deploy-production:
     name: Deploy em produção (Render)
-    needs: docker-image
+    needs: [docker-image, testes-bdd]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
