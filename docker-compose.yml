@@ -44,6 +44,28 @@ services:
     networks:
       - astrotrack-net
 
+  # Testes BDD e de API (Cucumber). Fica no profile "testes", então o
+  # "docker compose up" normal NÃO roda este serviço. Uso:
+  #   docker compose --profile testes run --rm --build testes
+  # O container espera a API responder antes de começar; o relatório
+  # (cucumber-reports.html) e a saída do Maven ficam em
+  # testes-automatizados/relatorios/ na máquina host.
+  testes:
+    profiles: ["testes"]
+    build:
+      context: ./testes-automatizados
+      dockerfile: Dockerfile
+    image: astrotrack-testes
+    environment:
+      API_BASE_URL: http://api:8080
+    volumes:
+      - ./testes-automatizados/relatorios:/testes/relatorios
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - astrotrack-net
+
 volumes:
   oracle-data:
 
