@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ViagemResponse",
+  "type": "object",
+  "required": ["idViagem", "idCliente", "nomeCliente", "idMotorista", "nomeMotorista", "idVeiculo", "placaVeiculo", "origem", "destino", "dataInicio", "dataFim", "status", "quilometragemTotal"],
+  "additionalProperties": false,
+  "properties": {
+    "idViagem": { "type": "integer", "minimum": 1 },
+    "idCliente": { "type": "integer", "minimum": 1 },
+    "nomeCliente": { "type": "string" },
+    "idMotorista": { "type": "integer", "minimum": 1 },
+    "nomeMotorista": { "type": "string" },
+    "idVeiculo": { "type": "integer", "minimum": 1 },
+    "placaVeiculo": { "type": "string" },
+    "origem": { "type": "string", "maxLength": 120 },
+    "destino": { "type": "string", "maxLength": 120 },
+    "dataInicio": { "type": "string" },
+    "dataFim": { "type": ["string", "null"] },
+    "status": { "type": "string", "enum": ["AGENDADA", "EM_ANDAMENTO", "FINALIZADA", "CANCELADA"] },
+    "quilometragemTotal": { "type": "number", "minimum": 0 }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lista de MotoristaResponse",
+  "type": "array",
+  "items": { "$ref": "motorista-response.json" }
+}
